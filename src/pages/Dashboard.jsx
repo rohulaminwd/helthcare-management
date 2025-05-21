@@ -77,7 +77,7 @@ function Dashboard() {
         </header>
 
         {/* Content based on role */}
-        {userRole === 'patient' ? <PatientDashboard /> : <DoctorDashboard />}
+        {userRole !== 'patient' ? <PatientDashboard /> : <DoctorDashboard />}
       </main>
     </div>
   );
