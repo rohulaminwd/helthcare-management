@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -7,11 +7,64 @@ function Login() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('patient'); // Default role
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Add your login/signup logic here
+
+    if (isLogin) {
+      // Login Logic
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const user = users.find(
+        (u) => u.email === email && u.password === password
+      );
+
+      if (user) {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        navigate('/dashboard');
+      } else {
+        alert('Invalid credentials!');
+      }
+    } else {
+      // Signup Logic
+      if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+
+      // Check if user already exists
+      if (users.some((user) => user.email === email)) {
+        alert('User already exists with this email!');
+        return;
+      }
+
+      // Create new user
+      const newUser = {
+        name,
+        email,
+        password,
+        role,
+        id: Date.now(), // Simple way to generate unique id
+      };
+
+      // Save to localStorage
+      localStorage.setItem('users', JSON.stringify([...users, newUser]));
+      alert('Signup successful! Please login.');
+      setIsLogin(true);
+      resetForm();
+    }
+  };
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setName('');
+    setConfirmPassword('');
+    setRole('patient');
   };
 
   return (
@@ -27,24 +80,58 @@ function Login() {
         </div>
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           {!isLogin && (
-            <div className="mb-4">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
+            <>
+              <div className="mb-4">
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Role
+                </label>
+                <div className="mt-2 space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="patient"
+                      checked={role === 'patient'}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="ml-2">Patient</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="doctor"
+                      checked={role === 'doctor'}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="ml-2">Doctor</span>
+                  </label>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Enter your full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            </>
           )}
           <div className="mb-4">
             <label
@@ -143,7 +230,23 @@ function Login() {
         </form>
 
         <div className="text-center mt-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 flex items-center justify-center gap-x-2">
+            <Link
+              to="/"
+              className="font-medium text-blue-600 hover:text-blue-500 mr-1"
+            >
+              <svg
+                className="w-6 h-6 text-blue-600 hover:text-blue-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
             {isLogin ? "Don't have an account? " : 'Already have an account? '}
             <button
               onClick={() => setIsLogin(!isLogin)}

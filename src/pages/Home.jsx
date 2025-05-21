@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '../components/UI/Navbar';
 import Footer from '../components/UI/Footer';
 import Cta from '../components/Cta';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
   return (
@@ -21,12 +22,12 @@ const Home = () => {
                 decentralized platform. Your data, your rules.
               </p>
               <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-                <a
-                  href="#"
+                <Link
+                  to="/dashboard"
                   class="px-8 py-4 bg-white text-indigo-600 text-lg font-semibold rounded-lg hover:bg-gray-100 transition duration-300 text-center shadow-lg"
                 >
                   Join HealthChain
-                </a>
+                </Link>
                 <a
                   href="#"
                   class="px-8 py-4 border-2 border-white text-white text-lg font semibold rounded-lg hover:bg-white hover:bg-opacity-10 transition duration-300 text-center"
@@ -37,11 +38,10 @@ const Home = () => {
             </div>
             <div class="animate__animated animate__fadeInRight">
               <img
-                src="https://images.unsplash.com/photo-1579684385127
-1ef15d508118?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                src="https://images.ctfassets.net/9xr9e2s5heun/Hooa3a6QpihD3STwbvpdR/7a4e86baf4da0e4723a34688edb8fbed/PlaidHeroImage.png?w=800&q=50"
                 alt="Doctor using digital 
 tablet"
-                class="rounded-xl shadow-2xl border-8 border-white border-opacity-20"
+                class="rounded-xl  border-opacity-20"
               />
             </div>
           </div>

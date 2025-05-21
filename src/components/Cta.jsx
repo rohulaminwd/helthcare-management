@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Cta = () => {
   return (
@@ -12,12 +13,12 @@ const Cta = () => {
           medical data.
         </p>
         <div class="flex flex-col gap-x-3 sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x 6">
-          <a
-            href="#"
+          <Link
+            to="/login"
             class="px-8 py-4 bg-indigo-600 text-white text-lg font-semibold rounded lg hover:bg-indigo-700 transition duration-300 shadow-lg"
           >
             Sign Up Now
-          </a>
+          </Link>
           <a
             href="#"
             class="px-8 py-4 border-2 border-indigo-600 text-indigo-600 text-lg font semibold rounded-lg hover:bg-indigo-50 transition duration-300"

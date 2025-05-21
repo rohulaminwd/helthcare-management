@@ -28,3 +28,19 @@ body {
 .nav-link:hover:after {
   width: 100%;
 }
+
+.sidebar-item:hover {
+  background-color: #f1f5f9;
+  color: #1e40af;
+}
+.sidebar-item:hover svg {
+  color: #1e40af;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+.notification-unread {
+  background-color: #f0f7ff;
+  border-left: 3px solid #3b82f6;
+}

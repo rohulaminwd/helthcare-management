@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
@@ -65,12 +65,12 @@ const Navbar = () => {
               >
                 Testimonials
               </a>
-              <a
-                href="#"
+              <Link
+                to="/login"
                 class="px-6 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150"
               >
                 Get Started
-              </a>
+              </Link>
             </div>
             <div class="lg:hidden">
               <button
