@@ -3,6 +3,7 @@ import Logout from '../utils/Logout';
 import { Link } from 'react-router-dom';
 
 const Patient = () => {
+  const user = JSON.parse(localStorage.getItem('currentUser'));
   return (
     <div className="md:pl-64 flex flex-col flex-1">
       <main className="flex-1" />
@@ -29,7 +30,7 @@ md overflow-hidden"
             <div className="p-6 flex flex-col md:flex-row justify-between items-center">
               <div className="mb-4 md:mb-0">
                 <h2 className="text-2xl font-bold text-white">
-                  Welcome back, John!
+                  Welcome back, {user?.name}!
                 </h2>
                 <p className="mt-1 text-blue-100 max-w-lg">
                   You have 1 upcoming appointment and 2 new messages from your
