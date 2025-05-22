@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Login() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -233,10 +233,10 @@ function Login() {
           <p className="text-sm text-gray-600 flex items-center justify-center gap-x-2">
             <Link
               to="/"
-              className="font-medium text-blue-600 hover:text-blue-500 mr-1"
+              className="font-medium text-blue-600 hover:text-blue-500  flex items-center gap-x-2"
             >
               <svg
-                className="w-6 h-6 text-blue-600 hover:text-blue-500"
+                className="w-5 h-5 text-blue-600 hover:text-blue-500"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -245,7 +245,8 @@ function Login() {
                   d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
                   clipRule="evenodd"
                 />
-              </svg>
+              </svg>{' '}
+              back
             </Link>
             {isLogin ? "Don't have an account? " : 'Already have an account? '}
             <button

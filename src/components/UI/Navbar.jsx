@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 const Navbar = () => {
   return (
     <div>
-      <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between h-20 items-center">
-            <div class="flex items-center">
-              <div class="flex-shrink-0 flex items-center">
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-20 items-center">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 flex items-center">
                 <svg
-                  class="h-10 w-10 text-indigo-600"
+                  className="h-10 w-10 text-indigo-600"
                   viewBox="0 0 24 24"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -41,44 +41,44 @@ const Navbar = () => {
                     stroke-linejoin="round"
                   />
                 </svg>
-                <span class="ml-3 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-cyan 500 bg-clip-text text-transparent">
+                <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-cyan 500 bg-clip-text text-transparent">
                   HealthChain
                 </span>
               </div>
             </div>
-            <div class="hidden lg:flex items-center space-x-10">
+            <div className="hidden lg:flex items-center space-x-10">
               <a
                 href="#features"
-                class="nav-link text-gray-700 hover:text-indigo-600 text-base font-medium transition duration-150"
+                className="nav-link text-gray-700 hover:text-indigo-600 text-base font-medium transition duration-150"
               >
                 Features
               </a>
               <a
                 href="#how-it-works"
-                class="nav-link text-gray-700 hover:text-indigo-600 text base font-medium transition duration-150"
+                className="nav-link text-gray-700 hover:text-indigo-600 text base font-medium transition duration-150"
               >
                 How It Works
               </a>
               <a
                 href="#testimonials"
-                class="nav-link text-gray-700 hover:text-indigo-600 text base font-medium transition duration-150"
+                className="nav-link text-gray-700 hover:text-indigo-600 text base font-medium transition duration-150"
               >
                 Testimonials
               </a>
               <Link
-                to="/login"
-                class="px-6 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150"
+                to="/dashboard"
+                className="px-6 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150"
               >
                 Get Started
               </Link>
             </div>
-            <div class="lg:hidden">
+            <div className="lg:hidden">
               <button
                 type="button"
-                class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none"
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none"
               >
                 <svg
-                  class="h-6 w-6"
+                  className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

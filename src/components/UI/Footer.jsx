@@ -2,13 +2,13 @@ import React from 'react';
 
 const Footer = () => {
   return (
-    <footer class="bg-gray-900 text-white pt-16 pb-8">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
-          <div class="col-span-2">
-            <div class="flex items-center">
+    <footer className="bg-gray-900 text-white pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+          <div className="col-span-2">
+            <div className="flex items-center">
               <svg
-                class="h-10 w-10 text-indigo-400"
+                className="h-10 w-10 text-indigo-400"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -40,17 +40,21 @@ const Footer = () => {
                   stroke-linejoin="round"
                 />
               </svg>
-              <span class="ml-3 text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan 400 bg-clip-text text-transparent">
+              <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan 400 bg-clip-text text-transparent">
                 HealthChain
               </span>
             </div>
-            <p class="mt-4 text-gray-400">
+            <p className="mt-4 text-gray-400">
               The future of healthcare data management, powered by blockchain
               technology.
             </p>
-            <div class="mt-6 flex space-x-6">
-              <a href="#" class="text-gray-400 hover:text-white">
-                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <div className="mt-6 flex space-x-6">
+              <a href="#" className="text-gray-400 hover:text-white">
+                <svg
+                  className="h-6 w-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355
 .012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 
@@ -61,8 +65,12 @@ const Footer = () => {
                   ></path>
                 </svg>
               </a>
-              <a href="#" class="text-gray-400 hover:text-white">
-                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+              <a href="#" className="text-gray-400 hover:text-white">
+                <svg
+                  className="h-6 w-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     fill-rule="evenodd"
                     d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 
@@ -78,8 +86,12 @@ const Footer = () => {
                   ></path>
                 </svg>
               </a>
-              <a href="#" class="text-gray-400 hover:text-white">
-                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+              <a href="#" className="text-gray-400 hover:text-white">
+                <svg
+                  className="h-6 w-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     fill-rule="evenodd"
                     d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c5.51 
@@ -97,8 +109,12 @@ const Footer = () => {
                   ></path>
                 </svg>
               </a>
-              <a href="#" class="text-gray-400 hover:text-white">
-                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+              <a href="#" className="text-gray-400 hover:text-white">
+                <svg
+                  className="h-6 w-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 
 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 
@@ -111,99 +127,99 @@ const Footer = () => {
             </div>
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-gray-300 tracking-wider uppercase mb 4">
+            <h3 className="text-sm font-semibold text-gray-300 tracking-wider uppercase mb 4">
               Solutions
             </h3>
-            <ul class="space-y-3">
+            <ul className="space-y-3">
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   For Patients
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   For Doctors
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   For Hospitals
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   For Researchers
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-gray-300 tracking-wider uppercase mb 4">
+            <h3 className="text-sm font-semibold text-gray-300 tracking-wider uppercase mb 4">
               Company
             </h3>
-            <ul class="space-y-3">
+            <ul className="space-y-3">
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   About
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   Blog
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   Careers
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   Press
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-gray-300 tracking-wider uppercase mb 4">
+            <h3 className="text-sm font-semibold text-gray-300 tracking-wider uppercase mb 4">
               Legal
             </h3>
-            <ul class="space-y-3">
+            <ul className="space-y-3">
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   Privacy
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   Terms
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   Security
                 </a>
               </li>
               <li>
-                <a href="#" class="text-gray-400 hover:text-white">
+                <a href="#" className="text-gray-400 hover:text-white">
                   Compliance
                 </a>
               </li>
             </ul>
           </div>
         </div>
-        <div class="mt-12 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify between items-center">
-          <p class="text-gray-400 text-sm">
+        <div className="mt-12 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify between items-center">
+          <p className="text-gray-400 text-sm">
             &copy; 2023 HealthChain, Inc. All rights reserved.
           </p>
-          <div class="mt-4 md:mt-0 flex space-x-6">
-            <a href="#" class="text-gray-400 hover:text-white text-sm">
+          <div className="mt-4 md:mt-0 flex space-x-6">
+            <a href="#" className="text-gray-400 hover:text-white text-sm">
               Privacy Policy
             </a>
-            <a href="#" class="text-gray-400 hover:text-white text-sm">
+            <a href="#" className="text-gray-400 hover:text-white text-sm">
               Terms of Service
             </a>
-            <a href="#" class="text-gray-400 hover:text-white text-sm">
+            <a href="#" className="text-gray-400 hover:text-white text-sm">
               Cookie Policy
             </a>
           </div>
