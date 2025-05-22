@@ -11,32 +11,36 @@ import Prescriptions from './pages/Prescriptions';
 import UploadReport from './pages/UploadReport';
 import Management from './pages/Management';
 import ActivityLog from './pages/ActivityLog';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<DashboardHome />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="notification" element={<Notifications />} />
-          <Route path="records" element={<Records />} />
-          <Route path="prescriptions" element={<Prescriptions />} />
-          <Route path="upload-report" element={<UploadReport />} />
-          <Route path="management" element={<Management />} />
-          <Route path="activity-log" element={<ActivityLog />} />
-        </Route>
-      </Routes>
-    </Router>
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<DashboardHome />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="notification" element={<Notifications />} />
+            <Route path="records" element={<Records />} />
+            <Route path="prescriptions" element={<Prescriptions />} />
+            <Route path="upload-report" element={<UploadReport />} />
+            <Route path="management" element={<Management />} />
+            <Route path="activity-log" element={<ActivityLog />} />
+          </Route>
+        </Routes>
+      </Router>
+      <ToastContainer />
+    </>
   );
 }
 

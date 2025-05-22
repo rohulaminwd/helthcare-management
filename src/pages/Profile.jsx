@@ -1,6 +1,7 @@
 import React from 'react';
 
 const Profile = () => {
+  const user = JSON.parse(localStorage.getItem('currentUser'));
   return (
     <div className="md:pl-64 flex flex-col flex-1">
       <div className="py-6">
@@ -15,7 +16,7 @@ const Profile = () => {
                 <i className="fas fa-arrow-left"></i>
               </a>
               <h1 className="text-2xl font-bold text-gray-900">
-                Patient Profile
+                {user?.role === 'doctor' ? 'Doctor Profile' : 'Patient Profile'}
               </h1>
               <span className="ml-3 verify-badge text-sm text-gray-500">
                 Blockchain Verified
@@ -81,13 +82,16 @@ mb-6"
           >
             <div className="px-6 py-4 border-b border-gray-200 flex items-center">
               <div className="relative">
-                <img
+                {/* <img
                   className="h-16 w-16 rounded-full mr-4"
                   src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb
 1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=25
  6&q=80"
                   alt="Patient photo"
-                />
+                /> */}
+                <div className="h-16 w-16 rounded-full bg-blue-100 border-2 mr-3 text-blue-900 text-4xl font-bold border-blue-700 flex items-center justify-center">
+                  <span className=" uppercase">{user?.name?.slice(0, 1)}</span>
+                </div>
                 <span
                   className="absolute bottom-0 right-0 block h-4 w-4 rounded-full bg
 green-400 border-2 border-white"
@@ -95,7 +99,7 @@ green-400 border-2 border-white"
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  John Doe
+                  {user?.name}
                 </h2>
                 <div className="flex items-center mt-1">
                   <span

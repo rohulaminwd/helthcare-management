@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 function Login() {
   const [isLogin, setIsLogin] = useState(false);
@@ -25,12 +26,12 @@ function Login() {
         localStorage.setItem('currentUser', JSON.stringify(user));
         navigate('/dashboard');
       } else {
-        alert('Invalid credentials!');
+        toast.error('Invalid credentials!');
       }
     } else {
       // Signup Logic
       if (password !== confirmPassword) {
-        alert('Passwords do not match!');
+        toast.error('Passwords do not match!');
         return;
       }
 
@@ -38,7 +39,7 @@ function Login() {
 
       // Check if user already exists
       if (users.some((user) => user.email === email)) {
-        alert('User already exists with this email!');
+        toast.warn('User already exists with this email!');
         return;
       }
 
@@ -53,7 +54,8 @@ function Login() {
 
       // Save to localStorage
       localStorage.setItem('users', JSON.stringify([...users, newUser]));
-      alert('Signup successful! Please login.');
+      // alert('Signup successful! Please login.');
+      toast.success('Signup successful! Please login.');
       setIsLogin(true);
       resetForm();
     }
