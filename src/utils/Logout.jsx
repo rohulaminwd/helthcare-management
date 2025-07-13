@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Logout = () => {
+const Logout = ({ className }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
@@ -14,9 +14,22 @@ const Logout = () => {
     <>
       <button
         onClick={() => setShowLogoutModal(true)}
-        className="text-xs font-medium text-blue-600 hover:text-blue-800"
+        className={`text-xs font-medium bg-white/20 hover:bg-white/30 p-2 rounded-lg ${className}`}
       >
-        Sign out
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+          />
+        </svg>
       </button>
 
       {showLogoutModal && (

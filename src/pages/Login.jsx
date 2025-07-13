@@ -73,11 +73,17 @@ function Login() {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
         <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Blockchain Medical
+          <h2 className="text-center text-2xl font-extrabold text-gray-900">
+            Access Your HealthChain
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {isLogin ? 'Sign in to your account' : 'Create your account'}
+            {isLogin ? (
+              'Sign in to your account'
+            ) : (
+              <p class="mt-1 text-gray-500 text-sm">
+                Decentralized • Secure • Patient-Owned
+              </p>
+            )}
           </p>
         </div>
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
@@ -88,10 +94,33 @@ function Login() {
                   htmlFor="role"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Role
+                  Sign in as:
                 </label>
-                <div className="mt-2 space-x-4">
-                  <label className="inline-flex items-center">
+                <div className="mt-2 space-x-4 flex justify-between ">
+                  <button
+                    onClick={() => setRole('patient')}
+                    type="button"
+                    className={`w-full duration-300 border rounded-lg hover:border-blue-600 py-1.5 border-gray-200 ${
+                      role === 'patient'
+                        ? 'bg-blue-500 text-white border-blue-600'
+                        : ''
+                    } `}
+                  >
+                    Patient
+                  </button>
+                  <button
+                    onClick={() => setRole('doctor')}
+                    type="button"
+                    className={`w-full border duration-300 rounded-lg hover:border-blue-600 py-1.5 border-gray-200 ${
+                      role === 'doctor'
+                        ? 'bg-blue-500 text-white border-blue-600'
+                        : ''
+                    } `}
+                  >
+                    Doctor
+                  </button>
+
+                  {/* <label className="inline-flex items-center">
                     <input
                       type="radio"
                       name="role"
@@ -112,7 +141,7 @@ function Login() {
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <span className="ml-2">Doctor</span>
-                  </label>
+                  </label> */}
                 </div>
               </div>
               <div className="mb-4">

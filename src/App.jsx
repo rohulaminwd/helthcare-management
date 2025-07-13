@@ -12,6 +12,7 @@ import UploadReport from './pages/UploadReport';
 import Management from './pages/Management';
 import ActivityLog from './pages/ActivityLog';
 import { ToastContainer } from 'react-toastify';
+import NewDashboard from './pages/NewDashboard';
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <NewDashboard />
               </ProtectedRoute>
             }
           >
