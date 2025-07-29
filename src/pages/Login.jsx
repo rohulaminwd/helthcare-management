@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getUsers, addItem, updateItem } from '../utils/dataService';
 
 function Login() {
   const [isLogin, setIsLogin] = useState(false);
@@ -11,22 +12,28 @@ function Login() {
   const [role, setRole] = useState('patient'); // Default role
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isLogin) {
       // Login Logic
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      const user = users.find(
-        (u) => u.email === email && u.password === password
-      );
+      try {
+        const users = await getUsers();
+        const user = users.find(
+          (u) => u.email === email && u.password === password
+        );
 
-      if (user) {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        navigate('/dashboard');
-      } else {
-        toast.error('Invalid credentials!');
+        if (user) {
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          toast.success('Login successful!');
+          navigate('/dashboard');
+        } else {
+          toast.error('Invalid credentials!');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        toast.error('Login failed. Please try again.');
       }
     } else {
       // Signup Logic
@@ -35,29 +42,53 @@ function Login() {
         return;
       }
 
-      const users = JSON.parse(localStorage.getItem('users')) || [];
+      try {
+        const users = await getUsers();
 
-      // Check if user already exists
-      if (users.some((user) => user.email === email)) {
-        toast.warn('User already exists with this email!');
-        return;
+        // Check if user already exists
+        if (users.some((user) => user.email === email)) {
+          toast.warn('User already exists with this email!');
+          return;
+        }
+
+        // Create new user with proper ID format
+        const userId = role === 'doctor' ? `DR-${Date.now()}` : `PT-${Date.now()}`;
+        const newUser = {
+          id: userId,
+          name,
+          email,
+          password,
+          role,
+          bloodType: role === 'patient' ? 'O+' : null,
+          hospital: role === 'doctor' ? 'City General Hospital' : null,
+          specialty: role === 'doctor' ? 'General Medicine' : null,
+          patients: role === 'doctor' ? [] : null,
+        };
+
+        // Save to localforage
+        await addItem('users', newUser);
+        
+        // If this is a new patient, assign them to an available doctor
+        if (role === 'patient') {
+          const allUsers = await getUsers();
+          const availableDoctors = allUsers.filter(user => user.role === 'doctor');
+          
+          if (availableDoctors.length > 0) {
+            // Assign to the first available doctor
+            const doctor = availableDoctors[0];
+            const currentPatients = doctor.patients || [];
+            const updatedPatients = [...currentPatients, userId];
+            await updateItem('users', doctor.id, { patients: updatedPatients });
+          }
+        }
+        
+        toast.success('Signup successful! Please login.');
+        setIsLogin(true);
+        resetForm();
+      } catch (error) {
+        console.error('Signup error:', error);
+        toast.error('Signup failed. Please try again.');
       }
-
-      // Create new user
-      const newUser = {
-        name,
-        email,
-        password,
-        role,
-        id: Date.now(), // Simple way to generate unique id
-      };
-
-      // Save to localStorage
-      localStorage.setItem('users', JSON.stringify([...users, newUser]));
-      // alert('Signup successful! Please login.');
-      toast.success('Signup successful! Please login.');
-      setIsLogin(true);
-      resetForm();
     }
   };
 
@@ -73,16 +104,25 @@ function Login() {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
         <div>
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <i className="fas fa-heartbeat text-blue-600 text-2xl"></i>
+            </div>
+          </div>
           <h2 className="text-center text-2xl font-extrabold text-gray-900">
             Access Your HealthChain
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             {isLogin ? (
-              'Sign in to your account'
+              <span className="flex items-center justify-center gap-2">
+                <i className="fas fa-sign-in-alt text-blue-500"></i>
+                Sign in to your account
+              </span>
             ) : (
-              <p class="mt-1 text-gray-500 text-sm">
+              <span className="flex items-center justify-center gap-2">
+                <i className="fas fa-user-plus text-blue-500"></i>
                 Decentralized • Secure • Patient-Owned
-              </p>
+              </span>
             )}
           </p>
         </div>
@@ -100,23 +140,25 @@ function Login() {
                   <button
                     onClick={() => setRole('patient')}
                     type="button"
-                    className={`w-full duration-300 border rounded-lg hover:border-blue-600 py-1.5 border-gray-200 ${
+                    className={`w-full duration-300 border rounded-lg hover:border-blue-600 py-1.5 border-gray-200 flex items-center justify-center gap-2 ${
                       role === 'patient'
                         ? 'bg-blue-500 text-white border-blue-600'
                         : ''
                     } `}
                   >
+                    <i className="fas fa-user-injured"></i>
                     Patient
                   </button>
                   <button
                     onClick={() => setRole('doctor')}
                     type="button"
-                    className={`w-full border duration-300 rounded-lg hover:border-blue-600 py-1.5 border-gray-200 ${
+                    className={`w-full border duration-300 rounded-lg hover:border-blue-600 py-1.5 border-gray-200 flex items-center justify-center gap-2 ${
                       role === 'doctor'
                         ? 'bg-blue-500 text-white border-blue-600'
                         : ''
                     } `}
                   >
+                    <i className="fas fa-user-md"></i>
                     Doctor
                   </button>
 
@@ -149,6 +191,7 @@ function Login() {
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700"
                 >
+                  <i className="fas fa-user mr-2 text-blue-500"></i>
                   Full Name
                 </label>
                 <input
@@ -169,6 +212,7 @@ function Login() {
               htmlFor="email-address"
               className="block text-sm font-medium text-gray-700"
             >
+              <i className="fas fa-envelope mr-2 text-blue-500"></i>
               Email address
             </label>
             <input
@@ -188,6 +232,7 @@ function Login() {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
+              <i className="fas fa-lock mr-2 text-blue-500"></i>
               Password
             </label>
             <input
@@ -208,6 +253,7 @@ function Login() {
                 htmlFor="confirm-password"
                 className="block text-sm font-medium text-gray-700"
               >
+                <i className="fas fa-shield-alt mr-2 text-blue-500"></i>
                 Confirm Password
               </label>
               <input
@@ -253,9 +299,19 @@ function Login() {
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             >
-              {isLogin ? 'Sign in' : 'Sign up'}
+              {isLogin ? (
+                <>
+                  <i className="fas fa-sign-in-alt mr-2"></i>
+                  Sign in
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-user-plus mr-2"></i>
+                  Sign up
+                </>
+              )}
             </button>
           </div>
         </form>

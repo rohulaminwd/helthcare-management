@@ -13,8 +13,14 @@ import Management from './pages/Management';
 import ActivityLog from './pages/ActivityLog';
 import { ToastContainer } from 'react-toastify';
 import NewDashboard from './pages/NewDashboard';
+import { initializeData } from './utils/dataService';
+import { useEffect } from 'react';
 
 function App() {
+  useEffect(() => {
+    initializeData();
+  }, []);
+
   return (
     <>
       <Router>

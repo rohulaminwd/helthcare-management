@@ -1,10 +1,692 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Logout from '../utils/Logout';
 import { Link } from 'react-router-dom';
+import { 
+  getPatientsByDoctor, 
+  getAppointmentsByUser, 
+  getPrescriptions, 
+  getMedicalRecords,
+  createPrescription,
+  createMedicalRecord,
+  searchPatients,
+  getUserById,
+  getSharedDataForDoctor,
+  revokeDataAccess
+} from '../utils/dataService';
+import { toast } from 'react-toastify';
+
+// Move WritePrescriptionPage outside the main component
+const WritePrescriptionPage = ({ 
+  prescriptionForm, 
+  setPrescriptionForm, 
+  patients, 
+  prescriptions, 
+  setPrescriptions, 
+  user, 
+  showDashboard 
+}) => {
+  const blockchainInfoStyle = {
+    background: 'rgba(139, 92, 246, 0.05)',
+    border: '1px dashed rgba(139, 92, 246, 0.3)',
+    borderRadius: '10px',
+    padding: '12px',
+    fontFamily: 'monospace',
+    fontSize: '0.85rem',
+  };
+
+  const handlePrescriptionSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    
+    if (!prescriptionForm.patientId || !prescriptionForm.medication || !prescriptionForm.dosage) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const prescriptionData = {
+        ...prescriptionForm,
+        doctorId: user.id,
+        prescribedDate: new Date().toISOString().split('T')[0]
+      };
+      
+      const createdPrescription = await createPrescription(prescriptionData);
+
+      if (createdPrescription) {
+        toast.success('Prescription created successfully!');
+        setPrescriptionForm({
+          patientId: '',
+          medication: '',
+          dosage: '',
+          frequency: '',
+          duration: '',
+          refills: 0,
+          purpose: ''
+        });
+        // Update local state instead of reloading all data
+        setPrescriptions(prev => [...prev, createdPrescription]);
+      } else {
+        toast.error('Failed to create prescription');
+      }
+    } catch (error) {
+      console.error('Error creating prescription:', error);
+      toast.error('Failed to create prescription');
+    }
+  }, [prescriptionForm, user?.id, setPrescriptionForm, setPrescriptions]);
+
+  const handleInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setPrescriptionForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }, [setPrescriptionForm]);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <i className="fas fa-file-prescription text-green-500"></i>
+            Write Prescription
+          </h2>
+          <button
+            onClick={showDashboard}
+            className="bg-gray-100 hover:bg-gray-200 py-2 px-4 rounded-lg font-medium flex items-center gap-2"
+          >
+            <i className="fas fa-arrow-left"></i> Back to Dashboard
+          </button>
+        </div>
+        <form onSubmit={handlePrescriptionSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div
+            className="bg-white p-6 rounded-xl shadow border-l-4 border-green-500"
+            style={{
+              background: 'linear-gradient(to right, #f0fdf4, #ffffff)',
+            }}
+          >
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Patient Information
+            </h3>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Select Patient</label>
+              <select 
+                name="patientId"
+                value={prescriptionForm.patientId}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                required
+              >
+                <option value="">Select a patient...</option>
+                {patients.map(patient => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.name} (ID: {patient.id})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 mt-6">
+              Medication
+            </h3>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">
+                Medication Name
+              </label>
+              <input
+                type="text"
+                name="medication"
+                value={prescriptionForm.medication}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                placeholder="Enter medication name"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-gray-700 mb-2">Dosage</label>
+                <input
+                  type="text"
+                  name="dosage"
+                  value={prescriptionForm.dosage}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="e.g., 500mg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Frequency</label>
+                <input
+                  type="text"
+                  name="frequency"
+                  value={prescriptionForm.frequency}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="e.g., 3 times daily"
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-gray-700 mb-2">Duration</label>
+                <input
+                  type="text"
+                  name="duration"
+                  value={prescriptionForm.duration}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="e.g., 10 days"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Refills</label>
+                <input
+                  type="number"
+                  name="refills"
+                  value={prescriptionForm.refills}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  min="0"
+                  required
+                />
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Purpose</label>
+              <input
+                type="text"
+                name="purpose"
+                value={prescriptionForm.purpose}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                placeholder="e.g., Blood pressure control"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Prescription Details
+            </h3>
+            <div className="bg-gray-50 p-5 rounded-lg mb-6">
+              <h4 className="font-bold text-lg mb-3">Current Medications</h4>
+              {prescriptions.length > 0 ? (
+                <ul className="list-disc pl-5 space-y-2">
+                  {prescriptions.slice(0, 3).map(presc => (
+                    <li key={presc.id}>
+                      {presc.medication} {presc.dosage} - {presc.frequency} ({presc.purpose})
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">No current medications</p>
+              )}
+            </div>
+            <div className="bg-yellow-50 p-5 rounded-lg mb-6">
+              <h4 className="font-bold text-lg mb-3">Known Allergies</h4>
+              <p>Penicillin, Sulfa drugs</p>
+            </div>
+            <div className="flex justify-end mt-6">
+              <button 
+                type="submit"
+                className="bg-green-500 hover:bg-green-600 text-white py-3 px-8 rounded-lg font-medium text-lg"
+              >
+                <i className="fas fa-file-medical mr-2"></i> Issue Prescription
+              </button>
+            </div>
+            <div className="mt-8" style={blockchainInfoStyle}>
+              <div className="flex gap-4 flex-wrap">
+                <div>
+                  <span className="text-gray-500">Current Block:</span>
+                  <span className="font-mono ml-2">1248765</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Node:</span>
+                  <span className="font-mono ml-2">City General Hospital</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Move UploadResultsPage outside the main component
+const UploadResultsPage = ({ 
+  medicalRecordForm, 
+  setMedicalRecordForm, 
+  patients, 
+  medicalRecords, 
+  setMedicalRecords, 
+  user, 
+  showDashboard 
+}) => {
+  const uploadAreaStyle = {
+    border: '2px dashed #8b5cf6',
+    borderRadius: '12px',
+    padding: '40px 20px',
+    textAlign: 'center',
+    backgroundColor: '#f5f3ff',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+  };
+
+  const handleMedicalRecordSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    
+    if (!medicalRecordForm.patientId || !medicalRecordForm.type || !medicalRecordForm.date) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const recordData = {
+        ...medicalRecordForm,
+        hospital: user.hospital || 'City General Hospital'
+      };
+      
+      const createdRecord = await createMedicalRecord(recordData);
+
+      if (createdRecord) {
+        toast.success('Medical record uploaded successfully!');
+        setMedicalRecordForm({
+          patientId: '',
+          type: '',
+          date: '',
+          hospital: '',
+          notes: ''
+        });
+        // Update local state instead of reloading all data
+        setMedicalRecords(prev => [...prev, createdRecord]);
+      } else {
+        toast.error('Failed to create medical record');
+      }
+    } catch (error) {
+      console.error('Error creating medical record:', error);
+      toast.error('Failed to create medical record');
+    }
+  }, [medicalRecordForm, user?.hospital, setMedicalRecordForm, setMedicalRecords]);
+
+  const handleInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setMedicalRecordForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }, [setMedicalRecordForm]);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <i className="fas fa-file-upload text-red-500"></i>
+            Upload Test Results
+          </h2>
+          <button
+            onClick={showDashboard}
+            className="bg-gray-100 hover:bg-gray-200 py-2 px-4 rounded-lg font-medium flex items-center gap-2"
+          >
+            <i className="fas fa-arrow-left"></i> Back to Dashboard
+          </button>
+        </div>
+        <form onSubmit={handleMedicalRecordSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Patient Information
+            </h3>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Select Patient</label>
+              <select 
+                name="patientId"
+                value={medicalRecordForm.patientId}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                required
+              >
+                <option value="">Select a patient...</option>
+                {patients.map(patient => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.name} (ID: {patient.id})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Test Type</label>
+              <select 
+                name="type"
+                value={medicalRecordForm.type}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                required
+              >
+                <option value="">Select test type...</option>
+                <option value="Blood Test">Blood Test</option>
+                <option value="MRI Scan">MRI Scan</option>
+                <option value="X-Ray">X-Ray</option>
+                <option value="CT Scan">CT Scan</option>
+                <option value="Ultrasound">Ultrasound</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Test Date</label>
+              <input
+                type="date"
+                name="date"
+                value={medicalRecordForm.date}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Notes</label>
+              <textarea
+                name="notes"
+                value={medicalRecordForm.notes}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                rows="3"
+                placeholder="Add notes about the results"
+              ></textarea>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Upload Files
+            </h3>
+            <div style={uploadAreaStyle} className="hover:bg-purple-100">
+              <i className="fas fa-cloud-upload-alt text-4xl text-purple-500 mb-3"></i>
+              <h4 className="text-xl font-semibold text-gray-800">
+                Upload Test Results
+              </h4>
+              <p className="text-gray-600 mb-4">
+                Drag & drop files here or click to browse
+              </p>
+              <button type="button" className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-6 rounded-lg font-medium">
+                Select Files
+              </button>
+              <p className="text-sm text-gray-500 mt-4">
+                Files will be stored on IPFS and linked via blockchain
+              </p>
+            </div>
+            <div className="mt-6">
+              <h4 className="font-semibold text-gray-800 mb-3">
+                Uploaded Files
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                  <div className="flex items-center">
+                    <i className="fas fa-file-pdf text-red-500 text-xl mr-3"></i>
+                    <div>
+                      <p className="font-medium">BloodTest_20230715.pdf</p>
+                      <p className="text-sm text-gray-500">2.4 MB</p>
+                    </div>
+                  </div>
+                  <button type="button" className="text-red-500 hover:text-red-700">
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="mt-8">
+              <button 
+                type="submit"
+                className="bg-red-500 hover:bg-red-600 text-white py-3 px-8 rounded-lg font-medium text-lg w-full"
+              >
+                <i className="fas fa-cloud-upload-alt mr-2"></i> Upload to
+                Blockchain
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Move SharedPatientDataPage outside the main component
+const SharedPatientDataPage = ({ user, showDashboard }) => {
+  const [sharedData, setSharedData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedShare, setSelectedShare] = useState(null);
+
+  const blockchainInfoStyle = {
+    background: 'rgba(139, 92, 246, 0.05)',
+    border: '1px dashed rgba(139, 92, 246, 0.3)',
+    borderRadius: '10px',
+    padding: '12px',
+    fontFamily: 'monospace',
+    fontSize: '0.85rem',
+  };
+
+  useEffect(() => {
+    loadSharedData();
+  }, []);
+
+  const loadSharedData = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      const data = await getSharedDataForDoctor(user.id);
+      setSharedData(data);
+    } catch (error) {
+      console.error('Error loading shared data:', error);
+      toast.error('Failed to load shared data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokeAccess = async (shareId) => {
+    try {
+      const success = await revokeDataAccess(shareId);
+      if (success) {
+        toast.success('Access revoked successfully');
+        loadSharedData(); // Reload the data
+      } else {
+        toast.error('Failed to revoke access');
+      }
+    } catch (error) {
+      console.error('Error revoking access:', error);
+      toast.error('Failed to revoke access');
+    }
+  };
+
+  const getDataTypesText = (sharedData) => {
+    const typeMap = {
+      'full_history': 'Full Medical History',
+      'prescriptions': 'Prescriptions',
+      'test_reports': 'Test Reports',
+      'appointments': 'Appointments'
+    };
+    return sharedData.map(type => typeMap[type] || type).join(', ');
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const isExpired = (expiresDate) => {
+    if (!expiresDate) return false;
+    return new Date(expiresDate) < new Date();
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <i className="fas fa-share-alt text-purple-500"></i>
+            Shared Patient Data
+          </h2>
+          <button
+            onClick={showDashboard}
+            className="bg-gray-100 hover:bg-gray-200 py-2 px-4 rounded-lg font-medium flex items-center gap-2"
+          >
+            <i className="fas fa-arrow-left"></i> Back to Dashboard
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <i className="fas fa-spinner fa-spin text-2xl text-purple-500"></i>
+            <span className="ml-3 text-gray-600">Loading shared data...</span>
+          </div>
+        ) : sharedData.length === 0 ? (
+          <div className="text-center py-12">
+            <i className="fas fa-share-alt text-4xl text-gray-300 mb-4"></i>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Shared Data</h3>
+            <p className="text-gray-500">Patients haven't shared any data with you yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {sharedData.map((share) => (
+              <div key={share.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Patient ID: {share.patientId}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Shared on: {formatDate(share.sharedDate)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isExpired(share.expiresDate) ? (
+                      <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                        Expired
+                      </span>
+                    ) : (
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        Active
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleRevokeAccess(share.id)}
+                      className="text-red-500 hover:text-red-700 p-2"
+                      title="Revoke Access"
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Shared Data Types
+                    </label>
+                    <p className="text-gray-900">{getDataTypesText(share.sharedData)}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Access Duration
+                    </label>
+                    <p className="text-gray-900">{share.accessDuration}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Expires On
+                    </label>
+                    <p className="text-gray-900">
+                      {share.expiresDate ? formatDate(share.expiresDate) : 'No expiration'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Transaction Hash
+                    </label>
+                    <p className="text-gray-900 font-mono text-sm">{share.txHash}</p>
+                  </div>
+                </div>
+
+                {share.notes && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes from Patient
+                    </label>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{share.notes}</p>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <i className="fas fa-shield-alt"></i>
+                      Blockchain Secured
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <i className="fas fa-clock"></i>
+                      {share.accessDuration}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedShare(share)}
+                    className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Blockchain Info */}
+        <div className="mt-8" style={blockchainInfoStyle}>
+          <div className="flex gap-4 flex-wrap">
+            <div>
+              <span className="text-gray-500">Total Shared Records:</span>
+              <span className="font-mono ml-2">{sharedData.length}</span>
+            </div>
+            <div>
+              <span className="text-gray-500">Active Shares:</span>
+              <span className="font-mono ml-2">
+                {sharedData.filter(share => !isExpired(share.expiresDate)).length}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const NewDoctorDashboard = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [activeNav, setActiveNav] = useState(0);
+  const [patients, setPatients] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [medicalRecords, setMedicalRecords] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [prescriptionForm, setPrescriptionForm] = useState({
+    patientId: '',
+    medication: '',
+    dosage: '',
+    frequency: '',
+    duration: '',
+    refills: 0,
+    purpose: ''
+  });
+  const [medicalRecordForm, setMedicalRecordForm] = useState({
+    patientId: '',
+    type: '',
+    date: '',
+    hospital: '',
+    notes: ''
+  });
+  
   const user = JSON.parse(localStorage.getItem('currentUser'));
 
   const showFeature = (featureId) => {
@@ -17,9 +699,47 @@ const NewDoctorDashboard = () => {
       'doctor-global-view': 5,
       'doctor-node-status': 6,
       'doctor-ipfs-attach': 7,
+      'doctor-shared-data': 8,
     };
     setActiveNav(navMapping[featureId] || 0);
   };
+
+  // Load data on component mount
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      console.log('Loading dashboard data for user:', user.id);
+      const [patientsData, appointmentsData, prescriptionsData, recordsData] = await Promise.all([
+        getPatientsByDoctor(user.id),
+        getAppointmentsByUser(user.id),
+        getPrescriptions(),
+        getMedicalRecords()
+      ]);
+      
+      console.log('Loaded patients:', patientsData);
+      console.log('Loaded appointments:', appointmentsData);
+      console.log('Loaded prescriptions:', prescriptionsData);
+      console.log('Loaded medical records:', recordsData);
+      
+      setPatients(patientsData);
+      setAppointments(appointmentsData);
+      setPrescriptions(prescriptionsData);
+      setMedicalRecords(recordsData);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  console.log(patients, appointments, prescriptions, medicalRecords, "patients, appointments, prescriptions, medicalRecords");
 
   const showDashboard = () => {
     setCurrentView('dashboard');
@@ -112,7 +832,7 @@ const NewDoctorDashboard = () => {
             >
               View Patients
             </button>
-            <span className="text-sm text-gray-500">12 active</span>
+            <span className="text-sm text-gray-500">{patients.length} active</span>
           </div>
         </div>
 
@@ -236,6 +956,31 @@ const NewDoctorDashboard = () => {
             View Status
           </button>
         </div>
+
+        <div
+          className="bg-white p-6 hover:transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+          style={cardStyle}
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+              <i className="fas fa-share-alt text-purple-600 text-xl"></i>
+            </div>
+            <h2 className="text-xl font-bold text-gray-800">Shared Patient Data</h2>
+          </div>
+          <p className="text-gray-600 mb-4">
+            View data shared by patients with you
+          </p>
+          <button
+            onClick={() => showFeature('doctor-shared-data')}
+            className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg font-medium"
+          >
+            View Shared Data
+          </button>
+          <div className="mt-3 text-xs text-gray-500 flex items-center gap-1">
+            <i className="fas fa-shield-alt"></i>
+            <span>Patient-controlled access</span>
+          </div>
+        </div>
       </div>
 
       {/* Blockchain Security Section */}
@@ -290,133 +1035,160 @@ const NewDoctorDashboard = () => {
     </div>
   );
 
-  const MyPatientsPage = () => (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <i className="fas fa-procedures text-purple-500"></i>
-            My Patients
-          </h2>
-          <button
-            onClick={showDashboard}
-            className="bg-gray-100 hover:bg-gray-200 py-2 px-4 rounded-lg font-medium flex items-center gap-2"
-          >
-            <i className="fas fa-arrow-left"></i> Back to Dashboard
-          </button>
-        </div>
-        <div className="mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search patients..."
-              className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            />
-            <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+  const MyPatientsPage = () => {
+    const handleSearch = async (e) => {
+      const query = e.target.value;
+      setSearchQuery(query);
+      
+      if (query.length > 2) {
+        try {
+          const results = await searchPatients(query);
+          setSearchResults(results);
+        } catch (error) {
+          console.error('Search error:', error);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    };
+
+    const handleRefresh = async () => {
+      setLoading(true);
+      try {
+        const patientsData = await getPatientsByDoctor(user.id);
+        setPatients(patientsData);
+        setSearchQuery('');
+        setSearchResults([]);
+      } catch (error) {
+        console.error('Error refreshing patients:', error);
+        toast.error('Failed to refresh patients');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const displayPatients = searchResults.length > 0 ? searchResults : patients;
+
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <i className="fas fa-procedures text-purple-500"></i>
+              My Patients
+            </h2>
+            <button
+              onClick={showDashboard}
+              className="bg-gray-100 hover:bg-gray-200 py-2 px-4 rounded-lg font-medium flex items-center gap-2"
+            >
+              <i className="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
           </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Patient
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Visit
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Next Appointment
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <i className="fas fa-user text-purple-600"></i>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        Robert Johnson
-                      </div>
-                      <div className="text-sm text-gray-500">ID: PT-789456</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Jul 15, 2023</div>
-                  <div className="text-sm text-gray-500">
-                    Hypertension follow-up
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Aug 15, 2023</div>
-                  <div className="text-sm text-gray-500">10:30 AM</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                    Active
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button className="text-purple-600 hover:text-purple-900 mr-3">
-                    View
-                  </button>
-                  <button className="text-blue-600 hover:text-blue-900">
-                    Message
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <i className="fas fa-user text-blue-600"></i>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        Maria Garcia
-                      </div>
-                      <div className="text-sm text-gray-500">ID: PT-123789</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Jun 20, 2023</div>
-                  <div className="text-sm text-gray-500">Annual checkup</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">Sep 10, 2023</div>
-                  <div className="text-sm text-gray-500">2:00 PM</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                    Active
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button className="text-purple-600 hover:text-purple-900 mr-3">
-                    View
-                  </button>
-                  <button className="text-blue-600 hover:text-blue-900">
-                    Message
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search patients..."
+                value={searchQuery}
+                onChange={handleSearch}
+                className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              />
+              <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+          </div>
+                  {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading patients...</p>
+            </div>
+          ) : displayPatients.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Patient
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Blood Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {displayPatients.map((patient) => (
+                    <tr key={patient.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <i className="fas fa-user text-purple-600"></i>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {patient.name}
+                            </div>
+                            <div className="text-sm text-gray-500">ID: {patient.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{patient.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{patient.bloodType || 'N/A'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Active
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button 
+                          onClick={() => setSelectedPatient(patient)}
+                          className="text-purple-600 hover:text-purple-900 mr-3"
+                        >
+                          View
+                        </button>
+                        <button className="text-blue-600 hover:text-blue-900">
+                          Message
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-user-slash text-gray-400 text-2xl"></i>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Patients Found</h3>
+              <p className="text-gray-500 mb-4">
+                {searchQuery ? 'No patients match your search criteria.' : 'You don\'t have any patients assigned yet.'}
+              </p>
+              {!searchQuery && (
+                <button
+                  onClick={handleRefresh}
+                  className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg font-medium"
+                >
+                  <i className="fas fa-refresh mr-2"></i> Refresh
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const PatientLookupPage = () => (
     <div className="container mx-auto px-4 py-8">
@@ -513,230 +1285,6 @@ const NewDoctorDashboard = () => {
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const WritePrescriptionPage = () => (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <i className="fas fa-file-prescription text-green-500"></i>
-            Write Prescription
-          </h2>
-          <button
-            onClick={showDashboard}
-            className="bg-gray-100 hover:bg-gray-200 py-2 px-4 rounded-lg font-medium flex items-center gap-2"
-          >
-            <i className="fas fa-arrow-left"></i> Back to Dashboard
-          </button>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div
-            className="bg-white p-6 rounded-xl shadow border-l-4 border-green-500"
-            style={{
-              background: 'linear-gradient(to right, #f0fdf4, #ffffff)',
-            }}
-          >
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Patient Information
-            </h3>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Select Patient</label>
-              <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                <option>Robert Johnson (ID: PT-789456)</option>
-                <option>Maria Garcia (ID: PT-123789)</option>
-                <option>John Smith (ID: PT-456123)</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Diagnosis</label>
-              <textarea
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                rows="3"
-                placeholder="Enter diagnosis details"
-              ></textarea>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 mt-6">
-              Medication
-            </h3>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">
-                Medication Name
-              </label>
-              <input
-                type="text"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="Enter medication name"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-gray-700 mb-2">Dosage</label>
-                <input
-                  type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="e.g., 500mg"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Frequency</label>
-                <input
-                  type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="e.g., 3 times daily"
-                />
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Duration</label>
-              <input
-                type="text"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="e.g., 10 days"
-              />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Prescription Details
-            </h3>
-            <div className="bg-gray-50 p-5 rounded-lg mb-6">
-              <h4 className="font-bold text-lg mb-3">Current Medications</h4>
-              <ul className="list-disc pl-5 space-y-2">
-                <li>Atorvastatin 20mg - Once daily (for cholesterol)</li>
-                <li>Lisinopril 10mg - Once daily (for blood pressure)</li>
-              </ul>
-            </div>
-            <div className="bg-yellow-50 p-5 rounded-lg mb-6">
-              <h4 className="font-bold text-lg mb-3">Known Allergies</h4>
-              <p>Penicillin, Sulfa drugs</p>
-            </div>
-            <div className="flex justify-end mt-6">
-              <button className="bg-green-500 hover:bg-green-600 text-white py-3 px-8 rounded-lg font-medium text-lg">
-                <i className="fas fa-file-medical mr-2"></i> Issue Prescription
-              </button>
-            </div>
-            <div className="mt-8" style={blockchainInfoStyle}>
-              <div className="flex gap-4 flex-wrap">
-                <div>
-                  <span className="text-gray-500">Current Block:</span>
-                  <span className="font-mono ml-2">1248765</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Node:</span>
-                  <span className="font-mono ml-2">City General Hospital</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const UploadResultsPage = () => (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <i className="fas fa-file-upload text-red-500"></i>
-            Upload Test Results
-          </h2>
-          <button
-            onClick={showDashboard}
-            className="bg-gray-100 hover:bg-gray-200 py-2 px-4 rounded-lg font-medium flex items-center gap-2"
-          >
-            <i className="fas fa-arrow-left"></i> Back to Dashboard
-          </button>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Patient Information
-            </h3>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Select Patient</label>
-              <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                <option>Robert Johnson (ID: PT-789456)</option>
-                <option>Maria Garcia (ID: PT-123789)</option>
-                <option>John Smith (ID: PT-456123)</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Test Type</label>
-              <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                <option>Blood Test</option>
-                <option>MRI Scan</option>
-                <option>X-Ray</option>
-                <option>CT Scan</option>
-                <option>Ultrasound</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Test Date</label>
-              <input
-                type="date"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Notes</label>
-              <textarea
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                rows="3"
-                placeholder="Add notes about the results"
-              ></textarea>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Upload Files
-            </h3>
-            <div style={uploadAreaStyle} className="hover:bg-purple-100">
-              <i className="fas fa-cloud-upload-alt text-4xl text-purple-500 mb-3"></i>
-              <h4 className="text-xl font-semibold text-gray-800">
-                Upload Test Results
-              </h4>
-              <p className="text-gray-600 mb-4">
-                Drag & drop files here or click to browse
-              </p>
-              <button className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-6 rounded-lg font-medium">
-                Select Files
-              </button>
-              <p className="text-sm text-gray-500 mt-4">
-                Files will be stored on IPFS and linked via blockchain
-              </p>
-            </div>
-            <div className="mt-6">
-              <h4 className="font-semibold text-gray-800 mb-3">
-                Uploaded Files
-              </h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                  <div className="flex items-center">
-                    <i className="fas fa-file-pdf text-red-500 text-xl mr-3"></i>
-                    <div>
-                      <p className="font-medium">BloodTest_20230715.pdf</p>
-                      <p className="text-sm text-gray-500">2.4 MB</p>
-                    </div>
-                  </div>
-                  <button className="text-red-500 hover:text-red-700">
-                    <i className="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="mt-8">
-              <button className="bg-red-500 hover:bg-red-600 text-white py-3 px-8 rounded-lg font-medium text-lg w-full">
-                <i className="fas fa-cloud-upload-alt mr-2"></i> Upload to
-                Blockchain
-              </button>
             </div>
           </div>
         </div>
@@ -1189,7 +1737,7 @@ const NewDoctorDashboard = () => {
                 </p>
               </div>
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <i className="fas fa-user">{user?.name.slice(0, 1)}</i>
+                <i className="uppercase">{user?.name.slice(0, 1)}</i>
               </div>
             </div>
             <Logout />
@@ -1235,6 +1783,11 @@ const NewDoctorDashboard = () => {
               icon: 'fas fa-link',
               label: 'IPFS File Attach',
             },
+            {
+              id: 'doctor-shared-data',
+              icon: 'fas fa-share-alt',
+              label: 'Shared Data',
+            },
           ].map((item, index) => (
             <button
               key={item.id}
@@ -1258,11 +1811,31 @@ const NewDoctorDashboard = () => {
       {currentView === 'dashboard' && <DashboardContent />}
       {currentView === 'doctor-my-patients' && <MyPatientsPage />}
       {currentView === 'doctor-patient-lookup' && <PatientLookupPage />}
-      {currentView === 'doctor-write-prescription' && <WritePrescriptionPage />}
-      {currentView === 'doctor-upload-results' && <UploadResultsPage />}
+      {currentView === 'doctor-write-prescription' && <WritePrescriptionPage 
+        prescriptionForm={prescriptionForm} 
+        setPrescriptionForm={setPrescriptionForm} 
+        patients={patients} 
+        prescriptions={prescriptions} 
+        setPrescriptions={setPrescriptions} 
+        user={user} 
+        showDashboard={showDashboard} 
+      />}
+      {currentView === 'doctor-upload-results' && <UploadResultsPage 
+        medicalRecordForm={medicalRecordForm} 
+        setMedicalRecordForm={setMedicalRecordForm} 
+        patients={patients} 
+        medicalRecords={medicalRecords} 
+        setMedicalRecords={setMedicalRecords} 
+        user={user} 
+        showDashboard={showDashboard} 
+      />}
       {currentView === 'doctor-global-view' && <GlobalViewPage />}
       {currentView === 'doctor-node-status' && <NodeStatusPage />}
       {currentView === 'doctor-ipfs-attach' && <IPFSAttachPage />}
+      {currentView === 'doctor-shared-data' && <SharedPatientDataPage 
+        user={user} 
+        showDashboard={showDashboard} 
+      />}
     </div>
   );
 };
