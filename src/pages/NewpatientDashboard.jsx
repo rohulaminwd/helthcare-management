@@ -8,7 +8,8 @@ import {
   createAppointment,
   shareData,
   getUserById,
-  getUsers
+  getUsers,
+  deleteAppointment
 } from '../utils/dataService';
 import { toast } from 'react-toastify';
 
@@ -351,6 +352,24 @@ const NewpatientDashboard = () => {
   );
 
   const AppointmentsPage = () => {
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+
+    const handleCancelAppointment = async (appointmentId) => {
+      if (window.confirm('Are you sure you want to cancel this appointment?')) {
+        try {
+          await deleteAppointment(appointmentId);
+          toast.success('Appointment cancelled successfully!');
+          setShowCancelModal(false);
+          setSelectedAppointment(null);
+          await loadDashboardData(); // Reload appointments data
+        } catch (error) {
+          console.error('Error cancelling appointment:', error);
+          toast.error('Failed to cancel appointment');
+        }
+      }
+    };
+
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg p-6">
@@ -421,7 +440,13 @@ const NewpatientDashboard = () => {
                     <button className="text-blue-600 hover:text-blue-800 flex items-center">
                       <i className="fas fa-calendar-edit mr-1"></i> Reschedule
                     </button>
-                    <button className="text-red-600 hover:text-red-800 flex items-center ml-4">
+                    <button 
+                      className="text-red-600 hover:text-red-800 flex items-center ml-4"
+                      onClick={() => {
+                        setSelectedAppointment(appointment);
+                        setShowCancelModal(true);
+                      }}
+                    >
                       <i className="fas fa-times-circle mr-1"></i> Cancel
                     </button>
                   </div>
@@ -451,6 +476,33 @@ const NewpatientDashboard = () => {
             </div>
           )}
         </div>
+
+        {showCancelModal && selectedAppointment && (
+          <div className="fixed inset-0  bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">
+                Confirm Cancellation
+              </h3>
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to cancel the appointment with Dr. {selectedAppointment.doctorId} on {selectedAppointment.date} at {selectedAppointment.time}?
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleCancelAppointment(selectedAppointment.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg font-medium"
+                >
+                  Confirm Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

@@ -445,6 +445,11 @@ export const updateAppointmentStatus = async (appointmentId, status) => {
   return await updateItem('appointments', appointmentId, { status });
 };
 
+// Delete appointment (for cancellation)
+export const deleteAppointment = async (appointmentId) => {
+  return await deleteItem('appointments', appointmentId);
+};
+
 // Prescription operations
 export const createPrescription = async (prescriptionData) => {
   const newPrescription = {
