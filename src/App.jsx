@@ -15,6 +15,7 @@ import { ToastContainer } from 'react-toastify';
 import NewDashboard from './pages/NewDashboard';
 import { initializeData } from './utils/dataService';
 import { useEffect } from 'react';
+import InvoiceApp from './pages/Invoice';
 
 function App() {
   useEffect(() => {
@@ -27,6 +28,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/invoice" element={<InvoiceApp />} />
           <Route
             path="/dashboard"
             element={
